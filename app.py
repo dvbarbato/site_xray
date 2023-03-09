@@ -4,10 +4,11 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 import joblib
+import time
 
 import sklearn
 
-st.write('este Meu SITE!!!!!')
+# st.write('este Meu SITE!!!!!')
 
 
 with open('network1.json') as json_file:
@@ -35,18 +36,22 @@ def imagem(uma_imagem, scaler=scaler):
     return imagem
 
 
-st.title('Classificar')
+st.title('Classificador de Imagens')
+st.markdown('**Obs:** Valores menores que 0.5 indica uma possível inflamação no pulmão. Valores entre 0.5 e 1 indica normalidade')
 
-
-arquivo = st.file_uploader("Upload de uma imagem",
+arquivo = st.file_uploader("Faça o Upload da imagem",
                            type=["jpeg"])
 
 
 if arquivo is None:
-    st.text('Waiting for upload....')
+    st.text('Esperando pelo upload....')
 else:
     slot = st.empty()
-    slot.text('Running inference....')
+
+    with st.spinner('Carregando imagem...'):
+        time.sleep(3)
+
+    # slot.text('Executando...')
     test_image = Image.open(arquivo)
     st.image(test_image, caption="Input Image", width=200)
     test_image.save('img.jpeg')
@@ -55,40 +60,16 @@ else:
 
     previsao = network1_loaded.predict(img_tratada)
 
-    st.write(previsao)
+    # st.write(previsao[0][0])
 
-# # scaler = joblib.load('scaler_minmax.pkl')
-
-
-# import cv2
-# import numpy as np
-# import streamlit as st
-# import tensorflow as tf
-# from tensorflow.keras.preprocessing import image
-# from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input as mobilenet_v2_preprocess_input
-
-# model = tf.keras.models.load_model("weights1.hdf5")
-# # load file
-# uploaded_file = st.file_uploader("Choose a image file", type="jpeg")
-
-# map_dict = {0: 'pneumonia',
-#             1: 'normal'}
-
-
-# if uploaded_file is not None:
-#     # Convert the file to an opencv image.
-#     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-#     opencv_image = cv2.imdecode(file_bytes, 1)
-#     opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-#     resized = cv2.resize(opencv_image, (128, 128))
-#     # Now do something with the image! For example, let's display it:
-#     st.image(opencv_image, channels="RGB")
-
-#     resized = mobilenet_v2_preprocess_input(resized)
-#     img_reshape = resized[np.newaxis, ...]
-
-#     Genrate_pred = st.button("Generate Prediction")
-#     if Genrate_pred:
-#         prediction = model.predict(img_reshape).argmax()
-#         st.title("Predicted Label for the image is {}".format(
-#             map_dict[prediction]))
+    if previsao > 0.5:
+        output = 'PULMÃO NORMAL '
+        st.write("A pontuação de similaridade é de aproximadamente: ",
+                 previsao[0][0])
+        st.success(output, icon="✅")
+    else:
+        output = 'Possivel INFLAMAÇÃO'
+        st.write("A pontuação de similaridade é de aproximadamente: ",
+                 previsao[0][0])
+        st.warning(output, icon="⚠️")
+    slot.text('Concluido')
